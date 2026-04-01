@@ -135,3 +135,10 @@ CHANNEL_LAYERS = {
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'user_list'
 LOGOUT_REDIRECT_URL = 'login'
+
+# Required for Django 4.0+ behind HTTPS proxies (Render)
+CSRF_TRUSTED_ORIGINS = [
+    'https://zybo-skilltest.onrender.com',
+    'https://*.onrender.com',
+]
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
