@@ -1,0 +1,313 @@
+{% extends 'base.html' %}
+{% block title %}Chat with {{ other_user.username }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .chat-container {
+        background: #e2e8f0;
+        border: 1px solid #cbd5e0;
+        border-radius: 8px;
+        box-shadow: inset 2px 2px 8px rgba(0,0,0,0.1), inset -2px -2px 8px rgba(255,255,255,0.7);
+        padding: 15px;
+        margin-bottom: 20px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    #chat-log {
+        height: 55vh;
+        overflow-y: auto;
+        padding-right: 10px;
+    }
+
+    /* Scrollbar */
+    #chat-log::-webkit-scrollbar { width: 10px; }
+    #chat-log::-webkit-scrollbar-track { 
+        background: #cbd5e0; 
+        border-radius: 10px; 
+        box-shadow: inset 1px 1px 3px rgba(0,0,0,0.2); 
+    }
+    #chat-log::-webkit-scrollbar-thumb { 
+        background: linear-gradient(180deg, #a0aec0, #718096); 
+        border-radius: 10px; 
+        border: 1px solid #4a5568; 
+    }
+
+    .message {
+        margin-bottom: 15px; 
+        max-width: 80%; 
+        clear: both;
+        position: relative;
+        padding: 10px 15px;
+        font-size: 1.05rem;
+        line-height: 1.4;
+        box-shadow: 0 3px 6px rgba(0,0,0,0.2), inset 0 2px 3px rgba(255,255,255,0.8);
+    }
+    
+    .message-sent {
+        float: right;
+        background: linear-gradient(180deg, #68d391 0%, #38a169 100%);
+        border: 1px solid #276749;
+        color: white;
+        border-radius: 18px 18px 0 18px;
+        text-shadow: 0 -1px 1px rgba(0,0,0,0.3);
+    }
+    
+    .message-received {
+        float: left;
+        background: linear-gradient(180deg, #ffffff 0%, #edf2f7 100%);
+        border: 1px solid #cbd5e0;
+        color: #2d3748;
+        border-radius: 18px 18px 18px 0;
+        text-shadow: 1px 1px 0 rgba(255,255,255,0.8);
+    }
+
+    .timestamp { font-size: 0.75rem; display: block; text-align: right; margin-top: 5px; opacity: 0.9; }
+    .message-sent .timestamp { color: #f0fff4; }
+    .message-received .timestamp { color: #718096; }
+    
+    .read-status { font-weight: bold; margin-left: 5px; }
+    .message-sent .read-status { color: #c6f6d5; text-shadow: 0 1px 1px rgba(0,0,0,0.5); }
+    
+    .input-bar {
+        display: flex;
+        gap: 10px;
+        background: rgba(0,0,0,0.05);
+        padding: 10px;
+        border-radius: 10px;
+        box-shadow: inset 1px 1px 4px rgba(0,0,0,0.1);
+        border: 1px solid #cbd5e0;
+    }
+    
+    #chat-message-input {
+        flex-grow: 1;
+        margin-bottom: 0;
+    }
+
+    /* Gloss curve */
+    .message::after {
+        content: '';
+        position: absolute;
+        top: 2px; left: 2px; right: 2px; height: 40%;
+        background: linear-gradient(180deg, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0) 100%);
+        border-radius: 15px 15px 20% 20%;
+        pointer-events: none;
+    }
+
+    .delete-btn {
+        position: absolute;
+        bottom: -10px;
+        left: -10px;
+        background: radial-gradient(circle at 30% 30%, #fc8181, #e53e3e);
+        color: white;
+        border: 1px solid #9b2c2c;
+        border-radius: 50%;
+        width: 20px; height: 20px;
+        font-size: 12px;
+        text-align: center;
+        line-height: 18px;
+        cursor: pointer;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+        display: none;
+    }
+    .message-sent:hover .delete-btn { display: block; }
+    
+    #typing-indicator {
+        font-size: 0.9rem;
+        color: #718096;
+        text-shadow: 1px 1px 0 rgba(255,255,255,0.8);
+        padding: 5px 15px;
+        display: none;
+        font-style: italic;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="skeuo-panel" style="max-width: 800px; padding: 20px;">
+    
+    <div style="background: linear-gradient(180deg, #4299e1 0%, #2b6cb0 100%); 
+                margin: -20px -20px 15px -20px; 
+                padding: 15px 25px; 
+                border-top-left-radius: 12px; 
+                border-top-right-radius: 12px;
+                border-bottom: 2px solid #1a365d;
+                box-shadow: 0 3px 6px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255,255,255,0.5);
+                display:flex; justify-content: space-between; align-items: center;">
+        <h3 style="color: white; text-shadow: 0 -1px 2px rgba(0,0,0,0.6); margin: 0; display:flex; align-items:center; gap: 10px;">
+            <span style="font-size:24px;">👤</span> {{ other_user.username }}
+            {% if other_user.is_online %}
+                <span class="green-dot" title="Online"></span>
+            {% endif %}
+        </h3>
+        <a href="{% url 'user_list' %}" class="skeuo-btn skeuo-btn-small">⬅ Back</a>
+    </div>
+
+    <div class="chat-container">
+        <div id="chat-log">
+            {% for message in messages_history %}
+                {% if message.sender == request.user %}
+                    <div class="message message-sent" id="msg-{{ message.id }}">
+                        {{ message.content }}
+                        <div class="timestamp">
+                            {{ message.timestamp|date:"H:i" }}
+                            <span class="read-status" data-msg-id="{{ message.id }}">
+                                {% if message.is_read %}✓✓{% else %}✓{% endif %}
+                            </span>
+                        </div>
+                        <div class="delete-btn" onclick="deleteMessage({{ message.id }})" title="Delete Message">✗</div>
+                    </div>
+                {% else %}
+                    <div class="message message-received">
+                        {{ message.content }}
+                        <div class="timestamp">{{ message.timestamp|date:"H:i" }}</div>
+                    </div>
+                {% endif %}
+            {% endfor %}
+            <div style="clear:both;"></div>
+            <div id="typing-indicator">{{ other_user.username }} is typing...</div>
+        </div>
+    </div>
+
+    <div class="input-bar">
+        <input type="text" id="chat-message-input" class="skeuo-input" placeholder="Type your message here..." autocomplete="off">
+        <button id="chat-message-submit" class="skeuo-btn skeuo-btn-small" style="background: linear-gradient(180deg, #68d391 0%, #38a169 100%); border-color: #276749; color: white; text-shadow: 0 -1px 1px rgba(0,0,0,0.4);">
+            Send 📩
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const otherUserId = "{{ other_user.id }}";
+    const currentUserId = "{{ request.user.id }}";
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+    const chatSocket = new WebSocket(
+        wsProtocol + window.location.host + '/ws/chat/' + otherUserId + '/'
+    );
+
+    const chatLog = document.getElementById('chat-log');
+    
+    // Auto scroll to bottom
+    const scrollToBottom = () => {
+        chatLog.scrollTop = chatLog.scrollHeight;
+    };
+    scrollToBottom();
+
+    chatSocket.onopen = function(e) {
+        chatSocket.send(JSON.stringify({
+            'action': 'mark_read'
+        }));
+    };
+
+    chatSocket.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+        
+        if (data.action === 'chat_message') {
+            const isSentByMe = String(data.sender_id) === currentUserId;
+            const msgDiv = document.createElement('div');
+            
+            if (isSentByMe) {
+                msgDiv.className = 'message message-sent';
+                msgDiv.id = 'msg-' + data.msg_id;
+                msgDiv.innerHTML = `
+                    ${data.message}
+                    <div class="timestamp">
+                        ${data.timestamp}
+                        <span class="read-status" data-msg-id="${data.msg_id}">✓</span>
+                    </div>
+                    <div class="delete-btn" onclick="deleteMessage(${data.msg_id})" title="Delete Message">✗</div>
+                `;
+            } else {
+                msgDiv.className = 'message message-received';
+                msgDiv.innerHTML = `
+                    ${data.message}
+                    <div class="timestamp">${data.timestamp}</div>
+                `;
+                chatSocket.send(JSON.stringify({'action': 'mark_read'}));
+            }
+            
+            chatLog.appendChild(msgDiv);
+            
+            const clr = document.createElement('div');
+            clr.style.clear = 'both';
+            chatLog.insertBefore(clr, document.getElementById('typing-indicator'));
+
+            scrollToBottom();
+        } else if (data.action === 'read_receipt') {
+            const statuses = document.querySelectorAll('.read-status');
+            statuses.forEach(span => {
+                if (span.innerHTML.includes('✓') && !span.innerHTML.includes('✓✓')) {
+                    span.innerHTML = '✓✓';
+                }
+            });
+        } else if (data.action === 'typing') {
+            if (String(data.sender_id) === otherUserId) {
+                const indicator = document.getElementById('typing-indicator');
+                indicator.style.display = data.is_typing ? 'block' : 'none';
+                scrollToBottom();
+            }
+        } else if (data.action === 'message_deleted') {
+            const msgEl = document.getElementById('msg-' + data.msg_id);
+            if (msgEl) {
+                msgEl.style.display = 'none';
+            }
+        }
+    };
+
+    chatSocket.onclose = function(e) {
+        console.error('Chat socket closed unexpectedly');
+    };
+
+    const inputBtn = document.querySelector('#chat-message-submit');
+    const inputField = document.querySelector('#chat-message-input');
+
+    let typingTimeout = null;
+
+    inputField.focus();
+    inputField.onkeyup = function(e) {
+        if (e.keyCode === 13) {  // Enter
+            inputBtn.click();
+        } else {
+            // Typing logic
+            chatSocket.send(JSON.stringify({
+                'action': 'typing',
+                'is_typing': true
+            }));
+            clearTimeout(typingTimeout);
+            typingTimeout = setTimeout(() => {
+                chatSocket.send(JSON.stringify({
+                    'action': 'typing',
+                    'is_typing': false
+                }));
+            }, 1000);
+        }
+    };
+
+    inputBtn.onclick = function(e) {
+        const message = inputField.value.trim();
+        if (message.length > 0) {
+            chatSocket.send(JSON.stringify({
+                'action': 'chat_message',
+                'message': message
+            }));
+            inputField.value = '';
+            // Stop typing immediately
+            chatSocket.send(JSON.stringify({
+                'action': 'typing',
+                'is_typing': false
+            }));
+        }
+    };
+
+    function deleteMessage(msgId) {
+        if(confirm("Are you sure you want to delete this message?")) {
+            chatSocket.send(JSON.stringify({
+                'action': 'delete_message',
+                'msg_id': msgId
+            }));
+        }
+    }
+</script>
+{% endblock %}

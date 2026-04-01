@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+{% block title %}Users{% endblock %}
+
+{% block extra_css %}
+<style>
+    .user-list {
+        background: #e2e8f0;
+        border: 1px solid #cbd5e0;
+        border-radius: 8px;
+        box-shadow: inset 2px 2px 8px rgba(0,0,0,0.1), inset -2px -2px 8px rgba(255,255,255,0.7);
+        padding: 5px;
+    }
+    
+    .user-card {
+        background: var(--btn-grad);
+        border: 1px solid #cbd5e0;
+        margin: 5px;
+        padding: 15px 20px;
+        border-radius: 6px;
+        box-shadow: 2px 2px 4px rgba(0,0,0,0.1), inset 1px 1px 1px rgba(255,255,255,0.8);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        text-decoration: none;
+        color: #2d3748;
+        transition: all 0.1s;
+    }
+    
+    .user-card:hover {
+        background: #ebf8ff;
+    }
+    
+    .user-card:active {
+        box-shadow: inset 2px 2px 4px rgba(0,0,0,0.2);
+        background: var(--btn-active);
+    }
+    
+    .user-name {
+        font-weight: bold;
+        text-shadow: 1px 1px 0 rgba(255,255,255,0.8);
+        font-size: 1.1rem;
+    }
+    
+    .status-badge {
+        background: rgba(0,0,0,0.05);
+        padding: 4px 10px;
+        border-radius: 20px;
+        box-shadow: inset 1px 1px 3px rgba(0,0,0,0.2);
+        border: 1px solid #cbd5e0;
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 30px;
+        color: #718096;
+        text-shadow: 1px 1px 0 rgba(255,255,255,0.8);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="skeuo-panel" style="max-width: 600px;">
+    <div style="background: linear-gradient(180deg, #ed8936 0%, #c05621 100%); 
+                margin: -25px -25px 20px -25px; 
+                padding: 15px 20px; 
+                border-top-left-radius: 12px; 
+                border-top-right-radius: 12px;
+                border-bottom: 2px solid #7b341e;
+                box-shadow: 0 3px 6px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255,255,255,0.5);
+                display:flex; justify-content: space-between; align-items: center;">
+        <h3 style="color: white; text-shadow: 0 -1px 2px rgba(0,0,0,0.6); margin: 0;">Colleagues</h3>
+        <span style="color: #feebc8; font-size: 0.9rem; text-shadow: 0 -1px 1px rgba(0,0,0,0.5);">Select someone to chat</span>
+    </div>
+    
+    {% if messages %}
+    <div style="margin-bottom: 15px;">
+        {% for message in messages %}
+        <div style="padding: 10px 15px; border-radius: 8px; margin-bottom: 5px; font-weight: bold;
+                    {% if message.tags == 'success' %}
+                    background: linear-gradient(180deg, #c6f6d5, #9ae6b4); border: 1px solid #38a169; color: #276749;
+                    {% else %}
+                    background: linear-gradient(180deg, #fed7d7, #fc8181); border: 1px solid #e53e3e; color: #9b2c2c;
+                    {% endif %}
+                    box-shadow: inset 1px 1px 3px rgba(0,0,0,0.1); text-shadow: 1px 1px 0 rgba(255,255,255,0.6);">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="user-list">
+        {% for u in users %}
+        <div style="position: relative; display: flex; align-items: center;">
+            <a href="{% url 'chat' u.id %}" class="user-card" style="flex: 1; margin-right: 50px;">
+                <span class="user-name">
+                    <span style="display:inline-block; margin-right: 10px; background:linear-gradient(to bottom, #a0aec0, #718096);
+                                border-radius: 5px; width: 30px; height: 30px; text-align: center; line-height:30px; color: white;
+                                box-shadow: inset 0 1px 1px rgba(255,255,255,0.5), 0 2px 4px rgba(0,0,0,0.3); text-shadow: -1px -1px 0 rgba(0,0,0,0.5)">
+                        {{ u.username|first|upper }}
+                    </span>
+                    {{ u.username }}
+                    {% if u.unread_count > 0 %}
+                    <span style="background: red; color: white; border-radius: 50%; padding: 2px 7px; font-size: 0.8rem; margin-left: 5px; box-shadow: 1px 1px 3px rgba(0,0,0,0.3); text-shadow: none;">{{ u.unread_count }}</span>
+                    {% endif %}
+                </span>
+                <span class="status-badge">
+                    {% if u.is_online %}
+                        <span class="green-dot" title="Online"></span> Online
+                    {% else %}
+                        <span class="gray-dot" title="Offline"></span>
+                        <small style="color: #718096; text-shadow:1px 1px 0 #fff;">
+                            {{ u.last_seen|date:"H:i, M d"|default:"Never" }}
+                        </small>
+                    {% endif %}
+                </span>
+            </a>
+            <a href="{% url 'delete_user' u.id %}"
+               title="Delete {{ u.username }}"
+               style="position: absolute; right: 5px;
+                      background: radial-gradient(circle at 30% 30%, #fc8181, #e53e3e);
+                      color: white; border: 1px solid #9b2c2c; border-radius: 50%;
+                      width: 32px; height: 32px; font-size: 15px; text-align: center;
+                      line-height: 30px; text-decoration: none;
+                      box-shadow: 0 2px 4px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255,255,255,0.3);
+                      transition: transform 0.1s;"
+               onmouseover="this.style.transform='scale(1.15)'"
+               onmouseout="this.style.transform='scale(1)'">🗑</a>
+        </div>
+        {% empty %}
+        <div class="empty-state">
+            <h4>It's quiet in here...</h4>
+            <p>No other users are currently registered.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

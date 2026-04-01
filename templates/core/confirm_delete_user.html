@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block title %}Delete User – {{ target_user.username }}{% endblock %}
+{% block content %}
+<div class="skeuo-panel" style="max-width: 450px; margin-top: 80px; text-align: center;">
+
+    <div style="background: linear-gradient(180deg, #fc8181 0%, #e53e3e 100%);
+                margin: -25px -25px 25px -25px;
+                padding: 15px;
+                border-top-left-radius: 12px;
+                border-top-right-radius: 12px;
+                border-bottom: 2px solid #9b2c2c;
+                box-shadow: 0 3px 6px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255,255,255,0.4);
+                text-align: center;">
+        <h3 style="color: white; text-shadow: 0 -1px 2px rgba(0,0,0,0.6); margin: 0;">⚠️ Delete User</h3>
+    </div>
+
+    <div style="background: linear-gradient(180deg, #fff5f5 0%, #fed7d7 100%);
+                border: 1px solid #fc8181;
+                border-radius: 10px;
+                padding: 20px;
+                margin-bottom: 20px;
+                box-shadow: inset 2px 2px 6px rgba(0,0,0,0.05);">
+        <span style="font-size: 3rem;">🗑️</span>
+        <p style="font-size: 1.1rem; color: #742a2a; margin: 10px 0 0 0; font-weight: bold; text-shadow: 1px 1px 0 rgba(255,255,255,0.8);">
+            Are you sure you want to permanently delete<br>
+            <span style="font-size: 1.3rem; color: #9b2c2c;">{{ target_user.username }}</span>?
+        </p>
+        <p style="font-size: 0.9rem; color: #9b2c2c; margin-top: 8px; text-shadow: 1px 1px 0 rgba(255,255,255,0.5);">
+            All their messages and data will be permanently removed. This cannot be undone.
+        </p>
+    </div>
+
+    <div style="display: flex; gap: 15px;">
+        <a href="{% url 'user_list' %}"
+           style="flex: 1; padding: 12px; background: linear-gradient(180deg, #f0f4f8 0%, #d9e2ec 100%);
+                  border: 1px solid #a0aec0; border-radius: 8px; text-decoration: none; color: #4a5568;
+                  font-weight: bold; text-shadow: 1px 1px 0 rgba(255,255,255,0.8);
+                  box-shadow: 2px 2px 5px rgba(0,0,0,0.1), inset 0 1px 1px rgba(255,255,255,0.8);
+                  text-align: center; display: block;">
+            ← Cancel
+        </a>
+        <form method="post" style="flex: 1; margin: 0;">
+            {% csrf_token %}
+            <button type="submit"
+                    style="width: 100%; padding: 12px; background: linear-gradient(180deg, #fc8181 0%, #e53e3e 100%);
+                           border: 1px solid #9b2c2c; border-radius: 8px; color: white;
+                           font-weight: bold; text-shadow: 0 -1px 1px rgba(0,0,0,0.4);
+                           box-shadow: 2px 2px 5px rgba(0,0,0,0.2), inset 0 1px 1px rgba(255,255,255,0.3);
+                           cursor: pointer; font-size: 1rem;">
+                🗑️ Delete Permanently
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

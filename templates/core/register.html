@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+{% block title %}Register{% endblock %}
+
+{% block extra_css %}
+<style>
+    .field-wrap { margin-bottom: 18px; }
+    .field-wrap label {
+        display: block;
+        font-weight: bold;
+        color: #4a5568;
+        text-shadow: 1px 1px 0 rgba(255,255,255,0.6);
+        margin-bottom: 5px;
+    }
+    .input-eye-wrap { position: relative; }
+    .input-eye-wrap input { padding-right: 42px !important; }
+    .eye-btn {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 18px;
+        color: #718096;
+        padding: 0;
+        line-height: 1;
+        user-select: none;
+    }
+    .eye-btn:hover { color: #2b6cb0; }
+    .errorlist {
+        list-style: none;
+        padding: 0;
+        margin: 5px 0 0 0;
+        color: #c53030;
+        font-size: 0.85rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="skeuo-panel" style="max-width: 400px; margin-top: 60px;">
+    <div style="background: linear-gradient(180deg, #48bb78 0%, #2f855a 100%);
+                margin: -25px -25px 25px -25px;
+                padding: 15px;
+                border-top-left-radius: 12px;
+                border-top-right-radius: 12px;
+                border-bottom: 1px solid #1c4532;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255,255,255,0.4);
+                text-align: center;">
+        <h3 style="color: white; text-shadow: 0 -1px 2px rgba(0,0,0,0.6); margin: 0;">Register Hub</h3>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+        <div style="background:#fed7d7; border:1px solid #fc8181; border-radius:8px; padding:10px; margin-bottom:15px; color:#9b2c2c; font-size:0.9rem;">
+            {{ form.non_field_errors }}
+        </div>
+        {% endif %}
+
+        <!-- Username -->
+        <div class="field-wrap">
+            <label for="{{ form.username.id_for_label }}">Username</label>
+            <input type="text" name="{{ form.username.html_name }}" id="{{ form.username.id_for_label }}"
+                   value="{{ form.username.value|default:'' }}"
+                   class="skeuo-input" autocomplete="username">
+            {% if form.username.errors %}<ul class="errorlist">{% for e in form.username.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+        </div>
+
+        <!-- Email -->
+        <div class="field-wrap">
+            <label for="{{ form.email.id_for_label }}">Email</label>
+            <input type="email" name="{{ form.email.html_name }}" id="{{ form.email.id_for_label }}"
+                   value="{{ form.email.value|default:'' }}"
+                   class="skeuo-input" autocomplete="email">
+            {% if form.email.errors %}<ul class="errorlist">{% for e in form.email.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+        </div>
+
+        <!-- Password1 -->
+        <div class="field-wrap">
+            <label for="{{ form.password1.id_for_label }}">Password</label>
+            <div class="input-eye-wrap">
+                <input type="password" name="{{ form.password1.html_name }}" id="{{ form.password1.id_for_label }}"
+                       class="skeuo-input" autocomplete="new-password">
+                <button type="button" class="eye-btn" onclick="toggleEye('{{ form.password1.id_for_label }}', this)">👁</button>
+            </div>
+            {% if form.password1.errors %}<ul class="errorlist">{% for e in form.password1.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+        </div>
+
+        <!-- Password2 -->
+        <div class="field-wrap">
+            <label for="{{ form.password2.id_for_label }}">Confirm Password</label>
+            <div class="input-eye-wrap">
+                <input type="password" name="{{ form.password2.html_name }}" id="{{ form.password2.id_for_label }}"
+                       class="skeuo-input" autocomplete="new-password">
+                <button type="button" class="eye-btn" onclick="toggleEye('{{ form.password2.id_for_label }}', this)">👁</button>
+            </div>
+            {% if form.password2.errors %}<ul class="errorlist">{% for e in form.password2.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+        </div>
+
+        <button type="submit" class="skeuo-btn" style="margin-top: 8px; color: #2f855a;">Register Now</button>
+        <p style="text-align: center; margin-top: 18px; font-weight: normal;">
+            Already have an account?
+            <a href="{% url 'login' %}" style="color: #2f855a; font-weight: bold;">Login</a>
+        </p>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleEye(inputId, btn) {
+    const input = document.getElementById(inputId);
+    if (input.type === 'password') {
+        input.type = 'text';
+        btn.textContent = '🙈';
+    } else {
+        input.type = 'password';
+        btn.textContent = '👁';
+    }
+}
+</script>
+{% endblock %}
